@@ -1,6 +1,8 @@
 ---
 name: tronclass-cli
 description: Use this skill to interact with the TronClass learning management system (currently optimized for FJU). Use it whenever the user asks anything about their courses, assignments, deadlines, grades, or course materials on TronClass — even if they don't say "TronClass" explicitly. This includes checking what homework is due, finding and downloading lecture slides or PDFs, submitting assignments, listing enrolled courses, or viewing activity details. If the user mentions school, assignments, due dates, course files, or anything that sounds like an LMS task, lean toward using this skill.
+repository: https://github.com/YuJun-BO2/tronclass-cli-skill
+homepage: https://github.com/YuJun-BO2/tronclass-cli-ts
 ---
 
 # TronClass CLI Skill
