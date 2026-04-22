@@ -65,9 +65,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    # Pinned to v0.9.0 (commit 76944f0e3292b2151436cdb66b5ae085dcb82d2d).
-    # Check https://github.com/openclaw/clawhub/releases for updates.
-    uses: openclaw/clawhub/.github/workflows/package-publish.yml@76944f0e3292b2151436cdb66b5ae085dcb82d2d
+    uses: openclaw/clawhub/.github/workflows/package-publish.yml@main
     with:
       dry_run: ${{ needs.resolve-publish-params.outputs.dry_run == 'true' }}
       version: ${{ needs.resolve-publish-params.outputs.version }}
