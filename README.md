@@ -6,12 +6,39 @@ Once installed, you can ask your agent in plain language to check assignments, d
 
 ## Install
 
-Install from [ClawHub](https://clawhub.ai/yujun-bo2/tronclass-cli).
+### 1. Install the skill
 
-Then install the underlying CLI tool:
+**Via ClawHub CLI** (recommended):
+
+```bash
+clawhub install yujun-bo2/tronclass-cli
+# or pin a specific version
+clawhub install yujun-bo2/tronclass-cli --version 1.0.0
+```
+
+The skill page lives at <https://clawhub.ai/yujun-bo2/tronclass-cli>.
+
+**Manual install** (without the ClawHub CLI) — clone into your agent's skills directory:
+
+```bash
+git clone https://github.com/YuJun-BO2/tronclass-cli-skill.git \
+  ~/.claude/skills/tronclass-cli
+```
+
+Adjust the target path for your agent (`.claude/skills/` for project-scoped, `~/.claude/skills/` for personal, or your OpenClaw skills directory).
+
+### 2. Install the underlying CLI
+
+If you installed via ClawHub, OpenClaw will prompt you to install the `tronclass` binary automatically (it's declared in the skill's `metadata.openclaw.install`). Otherwise install it yourself:
 
 ```bash
 npm install -g tronclass-cli
+```
+
+Verify it's on your PATH:
+
+```bash
+tronclass --version
 ```
 
 ## First-time login
