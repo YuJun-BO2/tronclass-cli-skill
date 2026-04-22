@@ -10,11 +10,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to publish (e.g. 1.0.0). Leave blank to let ClawHub infer.'
-        required: false
+        description: 'Version to publish (valid semver, e.g. 1.0.0).'
+        required: true
         type: string
       dry_run:
-        description: 'Preview only, do not publish.'
+        description: 'Skip the actual publish step.'
         type: boolean
         default: false
 
@@ -33,41 +33,93 @@ jobs:
           skill_name=$(awk '/^name:/ {print $2; exit}' SKILL.md)
           echo "Skill name: $skill_name"
           mkdir -p /tmp/stage
-          rsync -a --exclude '.git' ./ "/tmp/stage/$skill_name/"
+          rsync -a --exclude '.git' --exclude '.github' ./ "/tmp/stage/$skill_name/"
           echo "STAGED=/tmp/stage/$skill_name" >> "$GITHUB_ENV"
+          echo "SKILL_NAME=$skill_name" >> "$GITHUB_ENV"
 
       - name: Validate
         run: skills-ref validate "$STAGED"
 
-  resolve-publish-params:
-    name: Resolve publish params
+  publish:
+    name: Publish to ClawHub
     needs: validate
     if: (github.event_name == 'push' && github.ref_type == 'tag') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.params.outputs.version }}
-      dry_run: ${{ steps.params.outputs.dry_run }}
+    env:
+      CLAWHUB_REGISTRY: https://clawhub.ai
     steps:
-      - id: params
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "dry_run=${{ inputs.dry_run }}" >> "$GITHUB_OUTPUT"
-            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "dry_run=false" >> "$GITHUB_OUTPUT"
-            # Strip leading 'v' from tag name (v1.2.3 -> 1.2.3)
-            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-          fi
+      - uses: actions/checkout@v4
+        with:
+          path: skill-src
 
-  publish:
-    name: Publish to ClawHub
-    needs: resolve-publish-params
-    permissions:
-      contents: read
-      id-token: write
-    uses: openclaw/clawhub/.github/workflows/package-publish.yml@main
-    with:
-      dry_run: ${{ needs.resolve-publish-params.outputs.dry_run == 'true' }}
-      version: ${{ needs.resolve-publish-params.outputs.version }}
-    secrets:
-      clawhub_token: ${{ secrets.CLAWHUB_TOKEN }}
+      - name: Checkout clawhub CLI source
+        uses: actions/checkout@v4
+        with:
+          repository: openclaw/clawhub
+          path: clawhub-src
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.10
+
+      - name: Install clawhub CLI deps
+        working-directory: clawhub-src
+        run: bun install --frozen-lockfile
+
+      - name: Resolve publish params
+        id: params
+        run: |
+          skill_name=$(awk '/^name:/ {print $2; exit}' skill-src/SKILL.md)
+          echo "slug=$skill_name" >> "$GITHUB_OUTPUT"
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            version="${{ inputs.version }}"
+            dry_run="${{ inputs.dry_run }}"
+          else
+            # Tag push — strip leading 'v'
+            version="${GITHUB_REF_NAME#v}"
+            dry_run="false"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "dry_run=$dry_run" >> "$GITHUB_OUTPUT"
+          echo "Publishing slug=$skill_name version=$version dry_run=$dry_run"
+
+      - name: Stage skill files
+        run: |
+          mkdir -p /tmp/stage
+          rsync -a --exclude '.git' --exclude '.github' skill-src/ /tmp/stage/${{ steps.params.outputs.slug }}/
+
+      - name: Write clawhub config
+        env:
+          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
+          CFG: ${{ runner.temp }}/clawhub-config.json
+        run: |
+          if [[ -z "$CLAWHUB_TOKEN" ]]; then
+            echo "::error::CLAWHUB_TOKEN secret is missing. Run 'clawhub login' locally and add the token to repo secrets."
+            exit 1
+          fi
+          python3 -c "
+          import json, os
+          from pathlib import Path
+          Path(os.environ['CFG']).write_text(json.dumps({
+              'registry': os.environ['CLAWHUB_REGISTRY'],
+              'token': os.environ['CLAWHUB_TOKEN'],
+          }) + '\n')
+          "
+          echo "CLAWHUB_CONFIG_PATH=$CFG" >> "$GITHUB_ENV"
+
+      - name: Publish skill
+        if: steps.params.outputs.dry_run != 'true'
+        working-directory: clawhub-src
+        run: |
+          bun packages/clawhub/src/cli.ts skill publish \
+            "/tmp/stage/${{ steps.params.outputs.slug }}" \
+            --slug "${{ steps.params.outputs.slug }}" \
+            --version "${{ steps.params.outputs.version }}" \
+            --tags latest \
+            --changelog "Release ${{ steps.params.outputs.version }}"
+
+      - name: Dry-run notice
+        if: steps.params.outputs.dry_run == 'true'
+        run: |
+          echo "Dry run — skipping actual publish. Would publish slug=${{ steps.params.outputs.slug }} version=${{ steps.params.outputs.version }}"
