@@ -1,6 +1,6 @@
 ---
 name: tronclass-cli
-description: Use this skill to interact with the TronClass learning management system (currently optimized for FJU). Use it whenever the user asks anything about their courses, assignments, deadlines, grades, or course materials on TronClass — even if they don't say "TronClass" explicitly. This includes checking what homework is due, finding and downloading lecture slides or PDFs, submitting assignments, listing enrolled courses, or viewing activity details. If the user mentions school, assignments, due dates, course files, or anything that sounds like an LMS task, lean toward using this skill.
+description: Use this skill to interact with the TronClass learning management system (currently optimized for FJU). Use it whenever the user asks anything about their courses, assignments, deadlines, grades, announcements, or course materials on TronClass — even if they don't say "TronClass" explicitly. This includes checking what homework is due, finding and downloading lecture slides or PDFs, submitting assignments, listing enrolled courses, reading school or course announcements, or viewing activity details. If the user mentions school, assignments, due dates, course files, announcements, or anything that sounds like an LMS task, lean toward using this skill.
 repository: https://github.com/YuJun-BO2/tronclass-cli-skill
 homepage: https://github.com/YuJun-BO2/tronclass-cli-ts
 ---
@@ -21,7 +21,7 @@ npm install -g tronclass-cli
 - **Authentication**: Most commands require a saved session. If a command fails, tell the user to run `tronclass auth login <username>` (requires interactive password input). Session is saved after login and reused automatically.
 - **FJU users**: Use `tronclass auth login --fju <student_id>` for the CAS flow with CAPTCHA support.
 - **Finding IDs**: The typical lookup chain is `courses list` → `activities list <course_id>` → `activities view <activity_id>`. The `todo` command shows activity IDs directly in the first column.
-- **Aliases**: `activities` → `a`, `courses` → `c`, `homework` → `hw`, `todo` → `td`. Subcommands also have short aliases (`list`→`l`, `view`→`v`, `download`→`d`).
+- **Aliases**: `activities` → `a`, `courses` → `c`, `homework` → `hw`/`h`, `todo` → `td`/`t`, `announcements` → `ann`. Subcommands also have short aliases (`list`→`l`/`ls`, `view`→`v`, `download`→`d`/`dl`, `submit`→`s`).
 
 ## Command Quick Reference
 
@@ -37,8 +37,11 @@ npm install -g tronclass-cli
 | `tronclass activities download <ref_id> [output]` | Download file (defaults to ~/Downloads/) |
 | `tronclass homework list <course_id>` | List homework for a course |
 | `tronclass homework submit <activity_id> <files...>` | Submit homework files |
+| `tronclass ann list [course_id]` | List announcements (school-wide if no course_id) |
+| `tronclass ann view <ann_id> [course_id]` | Rich view: metadata + HTML-rendered body + attachments |
+| `tronclass ann download <ref_id> [output]` | Download an announcement attachment |
 
-All commands support `--fields f1,f2,...` to customize displayed columns.
+Most list/view commands support `--fields f1,f2,...` to customize displayed columns.
 
 ## Key Behaviors
 
@@ -47,6 +50,10 @@ All commands support `--fields f1,f2,...` to customize displayed columns.
 **`tronclass activities view <id>`** — displays a formatted table (not raw JSON). The Attachments section lists each file with its `ref_id` and a ready-to-run download command. No need to manually dig through JSON.
 
 **`tronclass activities download <ref_id>`** — `output_file` is optional. If omitted, the file is saved to `~/Downloads/<filename>` using the server-provided filename.
+
+**`tronclass ann list`** — with no argument, lists the school-wide announcement feed (first page, ~30 items). Pass a `course_id` to list announcements for a specific course.
+
+**`tronclass ann view <ann_id>`** — renders the announcement's HTML body in the terminal (bold, links, lists, images). If you know which course the announcement belongs to, pass `course_id` as the second argument to skip a multi-page search of the global feed.
 
 ## Common Workflows
 
@@ -69,6 +76,13 @@ tronclass homework list <course_id>           # find activity_id
 tronclass homework submit <activity_id> ./my_essay.pdf
 ```
 
+**Read announcements:**
+```bash
+tronclass ann list                            # school-wide feed
+tronclass ann list <course_id>                # course-specific feed
+tronclass ann view <ann_id> [course_id]       # full content, HTML rendered
+```
+
 ## Reference Files
 
 For detailed option lists, field names, and edge cases, load the relevant reference:
@@ -78,3 +92,4 @@ For detailed option lists, field names, and edge cases, load the relevant refere
 - `references/courses.md` — course fields, `--raw` flag
 - `references/activities.md` — activities list/view/download in depth
 - `references/homework.md` — homework list, submit options, draft mode
+- `references/announcements.md` — announcements list, view (HTML rendering), download
