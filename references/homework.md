@@ -3,6 +3,7 @@
 ```bash
 tronclass homework <subcommand> [options]
 tronclass hw <subcommand>
+tronclass h  <subcommand>
 ```
 
 ---
