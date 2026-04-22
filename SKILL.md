@@ -1,8 +1,25 @@
 ---
 name: tronclass-cli
-description: Use this skill to interact with the TronClass learning management system (currently optimized for FJU). Use it whenever the user asks anything about their courses, assignments, deadlines, grades, announcements, or course materials on TronClass — even if they don't say "TronClass" explicitly. This includes checking what homework is due, finding and downloading lecture slides or PDFs, submitting assignments, listing enrolled courses, reading school or course announcements, or viewing activity details. If the user mentions school, assignments, due dates, course files, announcements, or anything that sounds like an LMS task, lean toward using this skill.
-repository: https://github.com/YuJun-BO2/tronclass-cli-skill
-homepage: https://github.com/YuJun-BO2/tronclass-cli-ts
+description: Interact with the TronClass learning management system (currently optimized for FJU) via the `tronclass` CLI — check courses, assignments, deadlines, grades, announcements, and course materials; download lecture slides or PDFs; submit homework. Use whenever the user asks anything about TronClass, even if they don't say "TronClass" explicitly. Triggers include checking what homework is due, downloading lecture slides or PDFs, submitting assignments, listing enrolled courses, reading school or course announcements, or viewing activity details. If the user mentions school, assignments, due dates, course files, or anything that sounds like an LMS task, lean toward using this skill.
+license: MIT
+metadata:
+  authors: YuJun-BO2
+  cli-version: 0.3.0
+  repository: https://github.com/YuJun-BO2/tronclass-cli-skill
+  homepage: https://github.com/YuJun-BO2/tronclass-cli-ts
+  openclaw:
+    emoji: "🎓"
+    homepage: https://github.com/YuJun-BO2/tronclass-cli-skill
+    requires:
+      bins:
+        - tronclass
+    install:
+      - id: npm
+        kind: node
+        package: tronclass-cli
+        bins:
+          - tronclass
+        label: Install TronClass CLI (npm)
 ---
 
 # TronClass CLI Skill
