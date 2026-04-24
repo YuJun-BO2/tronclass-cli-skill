@@ -4,7 +4,7 @@ description: Interact with the TronClass learning management system (currently o
 license: MIT
 metadata:
   authors: YuJun-BO2
-  cli-version: 0.3.0
+  cli-version: 0.3.1
   repository: https://github.com/YuJun-BO2/tronclass-cli-skill
   homepage: https://github.com/YuJun-BO2/tronclass-cli-ts
   openclaw:
@@ -35,8 +35,9 @@ npm install -g tronclass-cli
 
 ## General Guidelines
 
-- **Authentication**: Most commands require a saved session. If a command fails, tell the user to run `tronclass auth login <username>` (requires interactive password input). Session is saved after login and reused automatically.
+- **Authentication**: Most commands require a saved session. If a command fails, tell the user to run `tronclass auth login <username>`. Sessions last 24 hours and are reused automatically. `tronclass auth check` shows remaining time.
 - **FJU users**: Use `tronclass auth login --fju <student_id>` for the CAS flow with CAPTCHA support.
+- **Non-interactive login (agents/scripts)**: Pass `--password <p>` (and `--base-url <u>` for generic deployments) to skip prompts. For FJU, where a human must solve the CAPTCHA, use the two-step deferred flow: `tronclass auth login --fju --non-interactive <id>` prints a captcha ID and opens the captcha image; then `tronclass auth captcha --password <p> <id> <code>` completes the login. The password is never written to disk — it is supplied only at resume time.
 - **Finding IDs**: The typical lookup chain is `courses list` → `activities list <course_id>` → `activities view <activity_id>`. The `todo` command shows activity IDs directly in the first column.
 - **Aliases**: `activities` → `a`, `courses` → `c`, `homework` → `hw`/`h`, `todo` → `td`/`t`, `announcements` → `ann`. Subcommands also have short aliases (`list`→`l`/`ls`, `view`→`v`, `download`→`d`/`dl`, `submit`→`s`).
 
@@ -44,8 +45,10 @@ npm install -g tronclass-cli
 
 | Command | What it does |
 |---|---|
-| `tronclass auth login [--fju] <user>` | Log in (interactive) |
-| `tronclass auth check` | Show current session info |
+| `tronclass auth login [--fju] [--password <p>] [--base-url <u>] <user>` | Log in (interactive by default; `--password` / `--base-url` make it non-interactive) |
+| `tronclass auth login --fju --non-interactive <user>` | Start a deferred-CAPTCHA FJU login; prints a captcha ID, no password on disk |
+| `tronclass auth captcha --password <p> <id> <code>` | Complete a deferred FJU login with the solved CAPTCHA |
+| `tronclass auth check` | Show current session info, expiry, and remaining time |
 | `tronclass auth logout` | Clear saved session |
 | `tronclass todo` | Pending tasks — first column is the activity ID |
 | `tronclass courses list [--all] [--raw]` | List courses |
