@@ -4,7 +4,7 @@ description: Interact with the TronClass learning management system (currently o
 license: MIT
 metadata:
   authors: YuJun-BO2
-  cli-version: 0.3.1
+  cli-version: 0.4.0
   repository: https://github.com/YuJun-BO2/tronclass-cli-skill
   homepage: https://github.com/YuJun-BO2/tronclass-cli-ts
   openclaw:
@@ -35,7 +35,7 @@ npm install -g tronclass-cli
 
 ## General Guidelines
 
-- **Authentication**: Most commands require a saved session. If a command fails, tell the user to run `tronclass auth login <username>`. Sessions last 24 hours and are reused automatically. `tronclass auth check` shows remaining time.
+- **Authentication**: Most commands require a saved session. If a command fails, tell the user to run `tronclass auth login <username>`. The session is reused automatically; `tronclass auth check` probes a live TronClass endpoint to confirm whether it's still valid.
 - **FJU users**: Use `tronclass auth login --fju <student_id>` for the CAS flow with CAPTCHA support.
 - **Non-interactive login (agents/scripts)**: Pass `--password <p>` (and `--base-url <u>` for generic deployments) to skip prompts. For FJU, where a human must solve the CAPTCHA, use the two-step deferred flow: `tronclass auth login --fju --non-interactive <user>` prints a captcha ID and opens the captcha image; then `tronclass auth captcha --password <p> <captcha_id> <code>` completes the login. The password is never written to disk — it is supplied only at resume time.
 - **Finding IDs**: The typical lookup chain is `courses list` → `activities list <course_id>` → `activities view <activity_id>`. The `todo` command shows activity IDs directly in the first column.
@@ -48,7 +48,7 @@ npm install -g tronclass-cli
 | `tronclass auth login [--fju] [--password <p>] [--base-url <u>] <user>` | Log in (interactive by default; `--password` / `--base-url` make it non-interactive) |
 | `tronclass auth login --fju --non-interactive <user>` | Start a deferred-CAPTCHA FJU login; prints a captcha ID, no password on disk |
 | `tronclass auth captcha --password <p> <id> <code>` | Complete a deferred FJU login with the solved CAPTCHA |
-| `tronclass auth check` | Show current session info, expiry, and remaining time |
+| `tronclass auth check` | Probe a live endpoint to report session validity (Valid / Expired / Unknown) |
 | `tronclass auth logout` | Clear saved session |
 | `tronclass todo` | Pending tasks — first column is the activity ID |
 | `tronclass courses list [--all] [--raw]` | List courses |
@@ -56,6 +56,7 @@ npm install -g tronclass-cli
 | `tronclass activities view <activity_id>` | Rich view: metadata + description + attachments |
 | `tronclass activities download <ref_id> [output]` | Download file (defaults to ~/Downloads/) |
 | `tronclass homework list <course_id>` | List homework for a course |
+| `tronclass homework view <activity_id>` | Rich view: metadata + prompt + teacher attachments + your own submission/draft |
 | `tronclass homework submit <activity_id> <files...>` | Submit homework files |
 | `tronclass ann list [course_id]` | List announcements (school-wide if no course_id) |
 | `tronclass ann view <ann_id> [course_id]` | Rich view: metadata + HTML-rendered body + attachments |
@@ -70,6 +71,8 @@ Most list/view commands support `--fields f1,f2,...` to customize displayed colu
 **`tronclass activities view <id>`** — displays a formatted table (not raw JSON). The Attachments section lists each file with its `ref_id` and a ready-to-run download command. No need to manually dig through JSON.
 
 **`tronclass activities download <ref_id>`** — `output_file` is optional. If omitted, the file is saved to `~/Downloads/<filename>` using the server-provided filename.
+
+**`tronclass homework view <activity_id>`** — rich layout: metadata (status / deadline color-coded), HTML-rendered prompt, teacher attachments (each with `ref_id` for `activities download`), and a "My Submission" section showing whether you've submitted, saved a draft, or done nothing — plus the files you uploaded. Use this before submitting to read the prompt and confirm a draft.
 
 **`tronclass ann list`** — with no argument, lists the school-wide announcement feed (first page, ~30 items). Pass a `course_id` to list announcements for a specific course.
 
@@ -93,7 +96,10 @@ tronclass activities download <ref_id>        # saves to ~/Downloads/ automatica
 **Submit homework:**
 ```bash
 tronclass homework list <course_id>           # find activity_id
-tronclass homework submit <activity_id> ./my_essay.pdf
+tronclass homework view <activity_id>         # read the prompt + grab teacher attachments
+tronclass homework submit <activity_id> ./my_essay.pdf --draft   # save a draft first
+tronclass homework view <activity_id>         # verify the draft
+tronclass homework submit <activity_id> ./my_essay.pdf           # final submit
 ```
 
 **Read announcements:**
@@ -111,5 +117,5 @@ For detailed option lists, field names, and edge cases, load the relevant refere
 - `references/todo.md` — todo fields, filtering
 - `references/courses.md` — course fields, `--raw` flag
 - `references/activities.md` — activities list/view/download in depth
-- `references/homework.md` — homework list, submit options, draft mode
+- `references/homework.md` — homework list, view, submit options, draft mode
 - `references/announcements.md` — announcements list, view (HTML rendering), download
