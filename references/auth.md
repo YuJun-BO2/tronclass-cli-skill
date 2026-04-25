@@ -78,7 +78,28 @@ tronclass auth captcha --password 'my_password' abc123def456 3xyz
 tronclass auth check
 ```
 
-Prints a formatted table with authenticated username, student ID, base URL, school config, login time, expiry, and remaining time. The **Remaining** field is color-coded: green (>24 h), yellow (<24 h), red (<1 h or expired). Sessions last **24 hours** from login.
+Prints a formatted table with authenticated username, student ID, base URL, school config, and login time, plus a **Status** field driven by a live probe of an authenticated TronClass API endpoint:
+
+| HTTP response | Status |
+|---|---|
+| `200` | `● Valid` |
+| `401` / `403`, or a redirect to the CAS login page | `● Expired` |
+| anything else, or network error | `● Unknown` (a `Probe` row is added with the HTTP code or error message) |
+
+The cookie's embedded timestamp is **not** used to estimate expiry — TronClass uses a server-side sliding TTL with semantics the SDK can't read, so any client-side estimate would be misleading. **Login Time** comes from the cookie's creation time and is informational only.
+
+Example output:
+
+```
+┌────────────┬─────────────────────────────┐
+│ Status     │ ● Valid                     │
+│ User       │ 412242266                   │
+│ Student ID │ 452378                      │
+│ Base URL   │ https://elearn2.fju.edu.tw  │
+│ School     │ fju                         │
+│ Login Time │ 2026/4/21 03:12:05          │
+└────────────┴─────────────────────────────┘
+```
 
 ## Logout
 

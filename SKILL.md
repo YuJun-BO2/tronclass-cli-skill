@@ -35,7 +35,7 @@ npm install -g tronclass-cli
 
 ## General Guidelines
 
-- **Authentication**: Most commands require a saved session. If a command fails, tell the user to run `tronclass auth login <username>`. Sessions last 24 hours and are reused automatically. `tronclass auth check` shows remaining time.
+- **Authentication**: Most commands require a saved session. If a command fails, tell the user to run `tronclass auth login <username>`. The session is reused automatically; `tronclass auth check` probes a live TronClass endpoint to confirm whether it's still valid.
 - **FJU users**: Use `tronclass auth login --fju <student_id>` for the CAS flow with CAPTCHA support.
 - **Non-interactive login (agents/scripts)**: Pass `--password <p>` (and `--base-url <u>` for generic deployments) to skip prompts. For FJU, where a human must solve the CAPTCHA, use the two-step deferred flow: `tronclass auth login --fju --non-interactive <user>` prints a captcha ID and opens the captcha image; then `tronclass auth captcha --password <p> <captcha_id> <code>` completes the login. The password is never written to disk — it is supplied only at resume time.
 - **Finding IDs**: The typical lookup chain is `courses list` → `activities list <course_id>` → `activities view <activity_id>`. The `todo` command shows activity IDs directly in the first column.
@@ -48,7 +48,7 @@ npm install -g tronclass-cli
 | `tronclass auth login [--fju] [--password <p>] [--base-url <u>] <user>` | Log in (interactive by default; `--password` / `--base-url` make it non-interactive) |
 | `tronclass auth login --fju --non-interactive <user>` | Start a deferred-CAPTCHA FJU login; prints a captcha ID, no password on disk |
 | `tronclass auth captcha --password <p> <id> <code>` | Complete a deferred FJU login with the solved CAPTCHA |
-| `tronclass auth check` | Show current session info, expiry, and remaining time |
+| `tronclass auth check` | Probe a live endpoint to report session validity (Valid / Expired / Unknown) |
 | `tronclass auth logout` | Clear saved session |
 | `tronclass todo` | Pending tasks — first column is the activity ID |
 | `tronclass courses list [--all] [--raw]` | List courses |

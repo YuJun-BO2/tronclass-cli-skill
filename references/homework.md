@@ -57,7 +57,7 @@ Rich layout for a single homework. Sections:
 # Read the prompt and grab teacher attachments before starting
 tronclass homework view 987654
 
-# After saving a draft, view again to confirm what's queued
+# Save a draft, then view to confirm what's queued
 tronclass homework submit 987654 ./essay.pdf --draft
 tronclass homework view 987654
 ```
